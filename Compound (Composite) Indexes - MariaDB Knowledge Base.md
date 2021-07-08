@@ -8,7 +8,7 @@ Tài liệu này bắt đầu một cách tầm thường và có lẽ nhàm ch�
 
 Nó cũng giải thích [EXPLAIN][1] (to some extent).
 
-(Hầu hết điều này áp dụng cho nhánh non-SQL của cơ sở dữ liệu)
+(Hầu hết điều này áp dụng cho  cơ sở dữ liệu nhánh non-SQL)
 
 ## Câu truy vấn để bàn luận
 
@@ -75,7 +75,7 @@ Tốt rồi, bây giờ tôi đang phán đoán một chút ở đây. Tôi có 
     |  1 | SIMPLE      | Presidents | ALL  | NULL          | NULL | NULL    | NULL |   44 | Using where |
     +----+-------------+------------+------+---------------+------+---------+------+------+-------------+
     
-    # Or, using the other form of display:  EXPLAIN ... G
+    # Hoặc, sử dụng dạng hiển thị khác:  EXPLAIN ... G
                id: 1
       select_type: SIMPLE
             table: Presidents
@@ -106,7 +106,7 @@ Người mới làm quen, một khi anh ấy biết về lập chỉ mục, quy�
 MySQL hiếm khi sử dụng nhiều hơn một chỉ mục tại một thời điểm trong một truy vấn. Vì vậy, nó sẽ phân tích các chỉ mục có thể.
 
 * first_name -- có hai hàng khả thi (một lần tra cứu BTree, sau đó quét liên tục) 
-* last_name -- có hai hàng khả this Hãy nói nó chọn last_name. Đây là một bước thực hiện SELECT: 1\. Sử dụng Chỉ mục(last_name), tìm 2 mục nhập với chỉ mục last_name = 'Johnson'. 2\. Lấy khóa chính (ngầm được thêm vào mỗi chỉ số phụ trong InnoDB); get (17, 36). 3\. Tiếp cận dứ liệu bằng cách sử dụng seq = (17, 36) để lấy hàng cho Andrew Johnson and Lyndon B. Johnson. 4\. Sử dụng phần còn lại của mệnh đề WHERE lọc tất cả trừ hàng mong muốn. 5\. Đưa ra kết quả (1865-1869). 
+* last_name -- có hai hàng khả thi Hãy nói nó chọn last_name. Đây là một bước thực hiện SELECT: 1\. Sử dụng Chỉ mục(last_name), tìm 2 mục nhập với chỉ mục last_name = 'Johnson'. 2\. Lấy khóa chính (ngầm được thêm vào mỗi chỉ số phụ trong InnoDB); get (17, 36). 3\. Tiếp cận dứ liệu bằng cách sử dụng seq = (17, 36) để lấy hàng cho Andrew Johnson and Lyndon B. Johnson. 4\. Sử dụng phần còn lại của mệnh đề WHERE lọc tất cả trừ hàng mong muốn. 5\. Đưa ra kết quả (1865-1869). 
     
     
     mysql>  EXPLAIN  SELECT  term
@@ -126,7 +126,11 @@ MySQL hiếm khi sử dụng nhiều hơn một chỉ mục tại một thời �
 
 ## "Index Merge Intersect"
 
-OK, vậy bạn có thể thực sự thông minh và quyết định rằng MySQL nên đủ thông minh để sử dụng cả hai chỉ mục tên để nhận câu trả lời. Nó được gọi là  "Intersect". 1\. Sử dụng Chỉ mục(last_name), tìm 2 chỉ mục nhập vào với last_name = 'Johnson'; get (7, 17) 2\. Sử dụng Chỉ mục(first_name), tìm hai chỉ mục nhập vào với first_name = 'Andrew'; get (17, 36) 3\. "And" hai danh sách với nhau (7,17) & (17,36) = (17) 4\. Tiếp cận dữ liệu sử dụng seq = (17) để lấy hàng cho Andrew Johnson. 5\. Đưa kết quả (1865-1869).
+OK, vậy bạn có thể thực sự thông minh và quyết định rằng MySQL nên đủ thông minh để sử dụng cả hai chỉ mục tên để nhận câu trả lời. Nó được gọi là  "Intersect". 1\. Sử dụng Chỉ mục(last_name), tìm 2 chỉ mục nhập vào với last_name = 'Johnson'; get (7, 17) 
+2\. Sử dụng Chỉ mục(first_name), tìm hai chỉ mục nhập vào với first_name = 'Andrew'; get (17, 36) 
+3\. "And" hai danh sách với nhau (7,17) & (17,36) = (17) 
+4\. Tiếp cận dữ liệu sử dụng seq = (17) để lấy hàng cho Andrew Johnson. 
+5\. Đưa kết quả (1865-1869).
     
     
                id: 1
@@ -188,9 +192,9 @@ Mọi thứ giống như là sử dụng "ghép", ngoại trừ việc bổ sung
 ## Các biến thể 
 
 * Điều gì sẽ xảy ra khi bạn xáo trộn các trường trong câu lệnh WHERE? Trả lời: Thứ tự mọi thứ trong AND không quan trọng. 
-* Điều gì sẽ xảy ra khi bạn xáo trộn các trường trong Chỉ mục? Trả lừoi: Nó có thể tạo ra sự khác biệt lớn. More in a minute. 
+* Điều gì sẽ xảy ra khi bạn xáo trộn các trường trong Chỉ mục? Trả lời: Nó có thể tạo ra sự khác biệt lớn. Nhiều hơn 1 phút. 
 * Điều gì sẽ xảy ra nếu có các trường bổ sung ở cuối? Trả lời: một chút tác hại; có thể rất nhiều cái tốt(ví dụ, 'bao trùm'). 
-* Thừa thãi? Đó là, Điều gì sẽ xảy ra khi có cả hai: Chỉ mục(a), Chỉ mục(a,b)? Trả lời : Thừa chi phí gì đó trong INSERTs; nó hiếm khi sử dụng cho SELECTs. 
+* Thừa thãi? Đó là, Điều gì sẽ xảy ra khi có cả hai: Chỉ mục(a), Chỉ mục(a,b)? Trả lời : Thừa chi phí gì đó trong INSERTs; nó hiếm khi có tác dụng cho SELECTs.
 * Tiền tố? Đó là, Chỉ mục(last_name(5). first_name(5)) Trả lời: đừng bận tâm, nó hiếm khi giúp ích, và thường làm hại. (Chi tiết trong một chủ đề khác.) 
 
 ## Ví dụ thêm:
@@ -217,3 +221,5 @@ Mọi thứ giống như là sử dụng "ghép", ngoại trừ việc bổ sung
 ## Postlog
 
 Refreshed -- Oct, 2012; more links -- Nov 2016
+I95.7KL0LD3.81MI20.2KRank3.97KAge2014|03|26l0+1n/awhoissourceRankMore dataSummary reportDiagnosisDensity00n/a
+Alexa rank: 3.97K
